@@ -2,11 +2,11 @@ package fr.uno.domain.model.game
 
 import fr.uno.domain.command.{Command, PlayCard, StartGame}
 import fr.uno.domain.event._
-import fr.uno.domain.model.{Card, KickBackCardValue}
+import fr.uno.domain.model._
 import fr.uno.{NonEmptyState, State}
 
 package object Game {
-	private val minimumPlayerCount = 3
+	val minimumPlayerCount = 3
 
 	/**
 	 * f(State, Command) = Events
@@ -36,7 +36,7 @@ package object Game {
 	 */
 	def apply(currentState: State, event: Event): State = {
 		event match {
-			case GameStarted(id, playerCount, firstCard) => NonEmptyState(firstCard, 0, playerCount)
+			case GameStarted(id, playerCount, firstCard) => NonEmptyState(firstCard, 0, playerCount, Clockwise)
 			case CardPlayed(id, card, nextPlayer, direction) =>
 				NonEmptyState(card,
 							  nextPlayer,
@@ -51,10 +51,11 @@ package object Game {
 	private def isInvalidCard(state: State, cardPlayed: Card): Boolean =
 		state.topCard.value != cardPlayed.value && state.topCard.color != cardPlayed.color
 
-	private def nextPlayer(player: Int, playerCount: Int, direction: Int) = (player + direction) % playerCount
+	private def nextPlayer(player: Player, playerCount: PlayerCount, direction: Direction) =
+		(direction on player) % playerCount
 
-	private def changeDirection(direction: Int, card: Card): Int = card.value match {
-		case KickBackCardValue => - direction
+	private def changeDirection(direction: Direction, card: Card): Direction = card.value match {
+		case KickBackCardValue => direction.reverse
 		case _ => direction
 	}
 }

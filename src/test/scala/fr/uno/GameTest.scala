@@ -1,23 +1,23 @@
 package fr.uno
 
+import fr.uno.domain.model.game.Game
 import fr.uno.domain.event._
 import fr.uno.domain.command.{PlayCard, Command, StartGame}
 import fr.uno.domain.model._
 import org.scalatest.{Matchers, FunSuite}
+import Game.minimumPlayerCount
 
 class GameTest extends FunSuite with Matchers {
-	val minimumPlayerCount = 3
-
 	val fromScratch = Nil
 
-	val startGame = StartGame(GameId("theId"), minimumPlayerCount, firstCard = Card(Red, NumericCardValue(0)))
-	val startedZeroRedCard = GameStarted(GameId("theId"), minimumPlayerCount, firstCard = Card(Red, NumericCardValue(0)))
+	val startGame = StartGame(GameId("theId"), minimumPlayerCount, Card(Red, NumericCardValue(0)))
+	val startedZeroRedCard = GameStarted(GameId("theId"), minimumPlayerCount, Card(Red, NumericCardValue(0)))
 
 
 	test("from scratch, when GameStart, game should be started") {
 		val given = fromScratch
 		val when = startGame
-		val then: List[Event] = List(startedZeroRedCard)
+		val then = List(startedZeroRedCard)
 
 		specify(given, when, then)
 	}
@@ -25,7 +25,7 @@ class GameTest extends FunSuite with Matchers {
 	test("from scratch, when GameStart, with player count minus than 'minimumPlayerCount', should StartGameAborded") {
 		val given = fromScratch
 		val when = StartGame(GameId("theId"), 0, firstCard = Card(Red, NumericCardValue(0)))
-		val then: List[Event] = List(StartGameAborded(GameId("theId"), 0, firstCard =  Card(Red, NumericCardValue(0))))
+		val then = List(StartGameAborded(GameId("theId"), 0, firstCard =  Card(Red, NumericCardValue(0))))
 
 		specify(given, when, then)
 	}
@@ -33,7 +33,7 @@ class GameTest extends FunSuite with Matchers {
 	test("StartGame idempotent !") {
 		val given = List(startedZeroRedCard)
 		val when = startGame
-		val then: List[Event] = List(startedZeroRedCard)
+		val then = List(startedZeroRedCard)
 
 		specify(given, when, then)
 	}
@@ -41,7 +41,7 @@ class GameTest extends FunSuite with Matchers {
 	test("given GameStarted, when play correct card, card should be Played") {
 		val given = List(startedZeroRedCard)
 		val when = PlayCard(startedZeroRedCard.gameId, 0, Card(Blue, NumericCardValue(0)))
-		val then: List[Event] = List(CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player + 1))
+		val then = CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player + 1, Clockwise) :: Nil
 
 		specify(given, when, then)
 	}
@@ -50,7 +50,7 @@ class GameTest extends FunSuite with Matchers {
 	test("player can't play uncorrect card [number should match]") {
 		val given = startedZeroRedCard :: Nil
 		val when = PlayCard(startedZeroRedCard.gameId, 0, Card(Blue, NumericCardValue(1)))
-		val then: List[Event] = PlayerPlayedBadCard(when.gameId, 0, Card(Blue, NumericCardValue(1))) :: Nil
+		val then = PlayerPlayedBadCard(when.gameId, 0, Card(Blue, NumericCardValue(1))) :: Nil
 
 		specify(given, when, then)
 	}
@@ -58,7 +58,7 @@ class GameTest extends FunSuite with Matchers {
 	test("player can play card with same color & different numeric value") {
 		val given = startedZeroRedCard :: Nil
 		val when = PlayCard(startedZeroRedCard.gameId, 0, Card(Red, NumericCardValue(1)))
-		val then: List[Event] = CardPlayed(when.gameId, Card(Red, NumericCardValue(1)), 1, 1) :: Nil
+		val then = CardPlayed(when.gameId, Card(Red, NumericCardValue(1)), 1, Clockwise) :: Nil
 
 		specify(given, when, then)
 	}
@@ -66,7 +66,7 @@ class GameTest extends FunSuite with Matchers {
 	test("player 0 should play at first") {
 		val given = startedZeroRedCard :: Nil
 		val when = PlayCard(startedZeroRedCard.gameId, 1, Card(Blue, NumericCardValue(0)))
-		val then: List[Event] = PlayerPlayedAtWrongTurn(when.gameId, when.player, when.card) :: Nil
+		val then = PlayerPlayedAtWrongTurn(when.gameId, when.player, when.card) :: Nil
 
 		specify(given, when, then)
 	}
@@ -74,10 +74,10 @@ class GameTest extends FunSuite with Matchers {
 	test("[positive case] when play kick back card, then next player become previous player") {
 		val given =
 			startedZeroRedCard ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, -1) ::
+			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
 			Nil
 		val when = PlayCard(startedZeroRedCard.gameId, 2, Card(Red, NumericCardValue(0)))
-		val then: List[Event] = CardPlayed(startedZeroRedCard.gameId, Card(Red, NumericCardValue(0)), 1, -1) :: Nil
+		val then = CardPlayed(startedZeroRedCard.gameId, Card(Red, NumericCardValue(0)), 1, CounterClockwise) :: Nil
 
 		specify(given, when, then)
 	}
@@ -85,10 +85,10 @@ class GameTest extends FunSuite with Matchers {
 	test("[error case] when play kick back card, then next player become previous player") {
 		val given =
 			startedZeroRedCard ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, -1) ::
+			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
 			Nil
 		val when = PlayCard(startedZeroRedCard.gameId, 1, Card(Blue, NumericCardValue(0)))
-		val then: List[Event] = PlayerPlayedAtWrongTurn(when.gameId, when.player, when.card) :: Nil
+		val then = PlayerPlayedAtWrongTurn(when.gameId, when.player, when.card) :: Nil
 
 		specify(given, when, then)
 	}
@@ -96,11 +96,11 @@ class GameTest extends FunSuite with Matchers {
 	test("when play 'kick back' card, the direction changed") {
 		val given =
 			startedZeroRedCard ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, -1) ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), 1, -1) ::
+			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
+			CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), 1, CounterClockwise) ::
 			Nil
 		val when = PlayCard(startedZeroRedCard.gameId, 1, Card(Blue, NumericCardValue(0)))
-		val then: List[Event] = CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player -1, -1) :: Nil
+		val then = CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player -1, CounterClockwise) :: Nil
 
 		specify(given, when, then)
 	}
