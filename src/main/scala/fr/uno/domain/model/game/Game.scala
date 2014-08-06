@@ -6,7 +6,8 @@ import fr.uno.domain.model._
 import fr.uno.{NonEmptyState, State}
 
 package object Game {
-	val minimumPlayerCount = 3
+	val MINIMUM_PLAYER_COUNT = 3
+	val FIRST_PLAYER = 0
 
 	/**
 	 * f(State, Command) = Events
@@ -15,7 +16,7 @@ package object Game {
 	def decide(state: State, command: Command): List[Event] = {
 		(command match {
 			case StartGame(id, playerCount, firstCard) => {
-				if(playerCount < minimumPlayerCount) StartGameAborded(id, playerCount, firstCard)
+				if(playerCount < MINIMUM_PLAYER_COUNT) StartGameAborded(id, playerCount, firstCard)
 				else GameStarted(id, playerCount, firstCard)
 			}
 
@@ -36,13 +37,9 @@ package object Game {
 	 */
 	def apply(currentState: State, event: Event): State = {
 		event match {
-			case GameStarted(id, playerCount, firstCard) => NonEmptyState(firstCard, 0, playerCount, Clockwise)
+			case GameStarted(id, playerCount, firstCard) => NonEmptyState(firstCard, FIRST_PLAYER, playerCount, Clockwise)
 			case CardPlayed(id, card, nextPlayer, direction) =>
-				NonEmptyState(card,
-							  nextPlayer,
-							  currentState.playerCount,
-							  direction
-				)
+				NonEmptyState(card, nextPlayer, currentState.playerCount, direction)
 		}
 	}
 

@@ -5,17 +5,18 @@ import fr.uno.domain.event._
 import fr.uno.domain.command.{PlayCard, Command, StartGame}
 import fr.uno.domain.model._
 import org.scalatest.{Matchers, FunSuite}
-import Game.minimumPlayerCount
+import Game.{MINIMUM_PLAYER_COUNT, FIRST_PLAYER}
 
 class GameTest extends FunSuite with Matchers {
-	val fromScratch = Nil
+	val FROM_SCRATCH_EVENTS = Nil
 
-	val startGame = StartGame(GameId("theId"), minimumPlayerCount, Card(Red, NumericCardValue(0)))
-	val startedZeroRedCard = GameStarted(GameId("theId"), minimumPlayerCount, Card(Red, NumericCardValue(0)))
+	val startGame = StartGame(GameId("theId"), MINIMUM_PLAYER_COUNT, Card(Red, NumericCardValue(0)))
+	val startedZeroRedCard = GameStarted(GameId("theId"), MINIMUM_PLAYER_COUNT, Card(Red, NumericCardValue(0)))
 
+	val NO_PLAYER = 0
 
 	test("from scratch, when GameStart, game should be started") {
-		val given = fromScratch
+		val given = FROM_SCRATCH_EVENTS
 		val when = startGame
 		val then = List(startedZeroRedCard)
 
@@ -23,24 +24,24 @@ class GameTest extends FunSuite with Matchers {
 	}
 
 	test("from scratch, when GameStart, with player count minus than 'minimumPlayerCount', should StartGameAborded") {
-		val given = fromScratch
+		val given = FROM_SCRATCH_EVENTS
 		val when = StartGame(GameId("theId"), 0, firstCard = Card(Red, NumericCardValue(0)))
-		val then = List(StartGameAborded(GameId("theId"), 0, firstCard =  Card(Red, NumericCardValue(0))))
+		val then = List(StartGameAborded(GameId("theId"), NO_PLAYER, firstCard = Card(Red, NumericCardValue(0))))
 
 		specify(given, when, then)
 	}
 
 	test("StartGame idempotent !") {
-		val given = List(startedZeroRedCard)
+		val given = startedZeroRedCard :: Nil
 		val when = startGame
-		val then = List(startedZeroRedCard)
+		val then = startedZeroRedCard :: Nil
 
 		specify(given, when, then)
 	}
 
 	test("given GameStarted, when play correct card, card should be Played") {
-		val given = List(startedZeroRedCard)
-		val when = PlayCard(startedZeroRedCard.gameId, 0, Card(Blue, NumericCardValue(0)))
+		val given = startedZeroRedCard :: Nil
+		val when = PlayCard(startedZeroRedCard.gameId, FIRST_PLAYER, Card(Blue, NumericCardValue(0)))
 		val then = CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player + 1, Clockwise) :: Nil
 
 		specify(given, when, then)
@@ -49,18 +50,18 @@ class GameTest extends FunSuite with Matchers {
 	// TODO test by checking error or by expected 'green case' result ????
 	test("player can't play uncorrect card [number should match]") {
 		val given = startedZeroRedCard :: Nil
-		val when = PlayCard(startedZeroRedCard.gameId, 0, Card(Blue, NumericCardValue(1)))
-		val then = PlayerPlayedBadCard(when.gameId, 0, Card(Blue, NumericCardValue(1))) :: Nil
+		val when = PlayCard(startedZeroRedCard.gameId, FIRST_PLAYER, Card(Blue, NumericCardValue(1)))
+		val then = PlayerPlayedBadCard(when.gameId, NO_PLAYER, Card(Blue, NumericCardValue(1))) :: Nil
 
 		specify(given, when, then)
 	}
 
 	test("player can play card with same color & different numeric value") {
 		val given = startedZeroRedCard :: Nil
-		val when = PlayCard(startedZeroRedCard.gameId, 0, Card(Red, NumericCardValue(1)))
+		val when = PlayCard(startedZeroRedCard.gameId, FIRST_PLAYER, Card(Red, NumericCardValue(1)))
 		val then = CardPlayed(when.gameId, Card(Red, NumericCardValue(1)), 1, Clockwise) :: Nil
 
-		specify(given, when, then)
+		specify(given, when, then) // TODO encapsulate specify()
 	}
 
 	test("player 0 should play at first") {
