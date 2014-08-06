@@ -10,7 +10,7 @@ class GameTest extends FunSuite with Matchers {
 
 	val fromScratch = Nil
 
-	val startGame: StartGame = StartGame(GameId("theId"), minimumPlayerCount, firstCard = Card(Red, NumericCardValue(0)))
+	val startGame = StartGame(GameId("theId"), minimumPlayerCount, firstCard = Card(Red, NumericCardValue(0)))
 	val startedZeroRedCard = GameStarted(GameId("theId"), minimumPlayerCount, firstCard = Card(Red, NumericCardValue(0)))
 
 
