@@ -6,104 +6,87 @@ import fr.uno.domain.command.{PlayCard, Command, StartGame}
 import fr.uno.domain.model._
 import org.scalatest.{Matchers, FunSuite}
 import Game.{MINIMUM_PLAYER_COUNT, FIRST_PLAYER}
+import ops.ThrushOps
 
 class GameTest extends FunSuite with Matchers {
 	val FROM_SCRATCH_EVENTS = Nil
+	val GAME_ID = GameId("theId")
 
-	val startGame = StartGame(GameId("theId"), MINIMUM_PLAYER_COUNT, Card(Red, NumericCardValue(0)))
-	val startedZeroRedCard = GameStarted(GameId("theId"), MINIMUM_PLAYER_COUNT, Card(Red, NumericCardValue(0)))
+	val START_GAME = StartGame(GAME_ID, MINIMUM_PLAYER_COUNT, Card(Red, NumericCardValue(0)))
+	val GAME_STARTED_ZeroRedCard = GameStarted(GAME_ID, MINIMUM_PLAYER_COUNT, Card(Red, NumericCardValue(0)))
 
-	val NO_PLAYER = 0
+	val NO_PLAYER: PlayerCount = 0
+	val PLAYER_1: Player = 1
+	val PLAYER_2: Player = 2
 
 	test("from scratch, when GameStart, game should be started") {
-		val given = FROM_SCRATCH_EVENTS
-		val when = startGame
-		val then = List(startedZeroRedCard)
-
-		specify(given, when, then)
+		Given(FROM_SCRATCH_EVENTS) |> When(START_GAME) |> Then(GAME_STARTED_ZeroRedCard :: Nil)
 	}
 
 	test("from scratch, when GameStart, with player count minus than 'minimumPlayerCount', should StartGameAborded") {
-		val given = FROM_SCRATCH_EVENTS
-		val when = StartGame(GameId("theId"), 0, firstCard = Card(Red, NumericCardValue(0)))
-		val then = List(StartGameAborded(GameId("theId"), NO_PLAYER, firstCard = Card(Red, NumericCardValue(0))))
-
-		specify(given, when, then)
+		Given(FROM_SCRATCH_EVENTS) |>
+		When(StartGame(GameId("theId"), 0, firstCard = Card(Red, NumericCardValue(0)))) |>
+		Then(StartGameAborded(GameId("theId"), NO_PLAYER, Card(Red, NumericCardValue(0))) :: Nil)
 	}
 
 	test("StartGame idempotent !") {
-		val given = startedZeroRedCard :: Nil
-		val when = startGame
-		val then = startedZeroRedCard :: Nil
-
-		specify(given, when, then)
+		Given(GAME_STARTED_ZeroRedCard :: Nil) |> When(START_GAME) |> Then(GAME_STARTED_ZeroRedCard :: Nil)
 	}
 
 	test("given GameStarted, when play correct card, card should be Played") {
-		val given = startedZeroRedCard :: Nil
-		val when = PlayCard(startedZeroRedCard.gameId, FIRST_PLAYER, Card(Blue, NumericCardValue(0)))
-		val then = CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player + 1, Clockwise) :: Nil
-
-		specify(given, when, then)
+		Given { GAME_STARTED_ZeroRedCard :: Nil } |>
+		When { PlayCard(GAME_ID, FIRST_PLAYER, Card(Blue, NumericCardValue(0))) } |>
+		Then { CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), FIRST_PLAYER +1, Clockwise) :: Nil }
 	}
 
 	// TODO test by checking error or by expected 'green case' result ????
 	test("player can't play uncorrect card [number should match]") {
-		val given = startedZeroRedCard :: Nil
-		val when = PlayCard(startedZeroRedCard.gameId, FIRST_PLAYER, Card(Blue, NumericCardValue(1)))
-		val then = PlayerPlayedBadCard(when.gameId, NO_PLAYER, Card(Blue, NumericCardValue(1))) :: Nil
-
-		specify(given, when, then)
+		Given { GAME_STARTED_ZeroRedCard :: Nil } |>
+		When { PlayCard(GAME_ID, FIRST_PLAYER, Card(Blue, NumericCardValue(1))) } |>
+		Then { PlayerPlayedBadCard(GAME_ID, NO_PLAYER, Card(Blue, NumericCardValue(1))) :: Nil }
 	}
 
 	test("player can play card with same color & different numeric value") {
-		val given = startedZeroRedCard :: Nil
-		val when = PlayCard(startedZeroRedCard.gameId, FIRST_PLAYER, Card(Red, NumericCardValue(1)))
-		val then = CardPlayed(when.gameId, Card(Red, NumericCardValue(1)), 1, Clockwise) :: Nil
-
-		specify(given, when, then) // TODO encapsulate specify()
+		Given { GAME_STARTED_ZeroRedCard :: Nil } |>
+		When { PlayCard(GAME_ID, FIRST_PLAYER, Card(Red, NumericCardValue(1))) } |>
+		Then { CardPlayed(GAME_ID, Card(Red, NumericCardValue(1)), FIRST_PLAYER +1, Clockwise) :: Nil }
 	}
 
 	test("player 0 should play at first") {
-		val given = startedZeroRedCard :: Nil
-		val when = PlayCard(startedZeroRedCard.gameId, 1, Card(Blue, NumericCardValue(0)))
-		val then = PlayerPlayedAtWrongTurn(when.gameId, when.player, when.card) :: Nil
-
-		specify(given, when, then)
+		Given { GAME_STARTED_ZeroRedCard :: Nil } |>
+		When { PlayCard(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) } |>
+		Then { PlayerPlayedAtWrongTurn(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) :: Nil }
 	}
 
 	test("[positive case] when play kick back card, then next player become previous player") {
-		val given =
-			startedZeroRedCard ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
+		Given {
+			GAME_STARTED_ZeroRedCard ::
+			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_2, CounterClockwise) ::
 			Nil
-		val when = PlayCard(startedZeroRedCard.gameId, 2, Card(Red, NumericCardValue(0)))
-		val then = CardPlayed(startedZeroRedCard.gameId, Card(Red, NumericCardValue(0)), 1, CounterClockwise) :: Nil
-
-		specify(given, when, then)
+		} |>
+		When { PlayCard(GAME_ID, PLAYER_2, Card(Red, NumericCardValue(0))) } |>
+		Then { CardPlayed(GAME_ID, Card(Red, NumericCardValue(0)), PLAYER_2 -1, CounterClockwise) :: Nil }
 	}
 
 	test("[error case] when play kick back card, then next player become previous player") {
-		val given =
-			startedZeroRedCard ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
+		Given {
+			GAME_STARTED_ZeroRedCard ::
+			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
 			Nil
-		val when = PlayCard(startedZeroRedCard.gameId, 1, Card(Blue, NumericCardValue(0)))
-		val then = PlayerPlayedAtWrongTurn(when.gameId, when.player, when.card) :: Nil
-
-		specify(given, when, then)
+		} |>
+		When { PlayCard(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) } |>
+		Then { PlayerPlayedAtWrongTurn(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) :: Nil }
 	}
 
 	test("when play 'kick back' card, the direction changed") {
-		val given =
-			startedZeroRedCard ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
-			CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), 1, CounterClockwise) ::
-			Nil
-		val when = PlayCard(startedZeroRedCard.gameId, 1, Card(Blue, NumericCardValue(0)))
-		val then = CardPlayed(startedZeroRedCard.gameId, Card(Blue, NumericCardValue(0)), when.player -1, CounterClockwise) :: Nil
-
-		specify(given, when, then)
+		Given {
+			GAME_STARTED_ZeroRedCard ::
+				CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_2, CounterClockwise) ::
+				CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), PLAYER_1, CounterClockwise) ::
+				Nil
+		} |>
+		When { PlayCard(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) } |>
+		Then { CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), PLAYER_1 -1, CounterClockwise) :: Nil }
 	}
 
 	/*ignore("spike next player") {
@@ -121,9 +104,12 @@ class GameTest extends FunSuite with Matchers {
 	/**
 	 * "framework" de test
 	 * on test le triplet (element neutre, decide, apply)
-	 *
 	 */
-	def specify(givenEvents: List[Event], command: Command, expectedEvents: List[Event]) = {
+	def Given(events: List[Event]): List[Event] = events
+	def When(command: Command)(events: List[Event]) = (command, events)
+	def Then(expected: List[Event])(when: (Command, List[Event])) = specify(when._2, when._1, expected)
+
+	private def specify(givenEvents: List[Event], command: Command, expectedEvents: List[Event]) = {
 		import fr.uno.domain.model.game.Game._
 
 		val currentState = givenEvents.foldLeft(EmptyState: State) { (currentState, event) => apply(currentState, event) }
