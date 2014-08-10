@@ -1,8 +1,8 @@
 package fr.uno
 
-import fr.uno.domain.model.game.Game
+import fr.uno.application.command.{PlayCard, StartGame, Command}
+import fr.uno.domain.model.game.{EmptyState, State, Game}
 import fr.uno.domain.event._
-import fr.uno.domain.command.{PlayCard, Command, StartGame}
 import fr.uno.domain.model._
 import org.scalatest.{Matchers, FunSuite}
 import Game.{MINIMUM_PLAYER_COUNT, FIRST_PLAYER}
@@ -25,7 +25,7 @@ class GameTest extends FunSuite with Matchers {
 
 	test("from scratch, when GameStart, with player count minus than 'minimumPlayerCount', should StartGameAborded") {
 		Given(FROM_SCRATCH_EVENTS) |>
-		When(StartGame(GameId("theId"), 0, firstCard = Card(Red, NumericCardValue(0)))) |>
+		When(StartGame(GameId("theId"), 0, Card(Red, NumericCardValue(0)))) |>
 		Then(StartGameAborded(GameId("theId"), NO_PLAYER, Card(Red, NumericCardValue(0))) :: Nil)
 	}
 

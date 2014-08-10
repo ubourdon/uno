@@ -1,6 +1,6 @@
-package fr.uno.domain.command
+package fr.uno.application.command
 
-import fr.uno.domain.model.{GameId, Card}
+import fr.uno.domain.model.{Card, GameId}
 
 sealed trait Command
 

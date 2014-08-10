@@ -1,4 +1,4 @@
-package fr.uno
+package fr.uno.domain.model.game
 
 import fr.uno.domain.model._
 

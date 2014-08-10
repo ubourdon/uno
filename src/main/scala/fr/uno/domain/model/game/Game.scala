@@ -1,9 +1,8 @@
 package fr.uno.domain.model.game
 
-import fr.uno.domain.command.{Command, PlayCard, StartGame}
+import fr.uno.application.command.{PlayCard, StartGame, Command}
 import fr.uno.domain.event._
 import fr.uno.domain.model._
-import fr.uno.{NonEmptyState, State}
 
 package object Game {
 	val MINIMUM_PLAYER_COUNT = 3
