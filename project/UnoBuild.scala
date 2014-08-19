@@ -9,13 +9,17 @@ object UnoBuild extends Build {
 		version := "0.1-SNAPSHOT",
 		scalaVersion := "2.11.1",
 
+		resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
+
 		libraryDependencies ++= scalaLibs ++ javaLibs ++ tests
 	))
 }
 
 object Dependencies {
 	val scalaLibs = Seq(
-		"org.scalaz"                %% "scalaz-core"            % "7.0.6"
+		"org.scalaz"                %% "scalaz-core"            % "7.0.6",
+		"com.geteventstore"         %% "eventstore-client"      % "0.5.0",
+		"com.typesafe.play"         %% "play-json"              % "2.3.1"
 	)
 
 	val javaLibs = Seq(

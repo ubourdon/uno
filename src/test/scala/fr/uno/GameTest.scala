@@ -1,12 +1,12 @@
 package fr.uno
 
-import fr.uno.application.command.{PlayCard, StartGame, Command}
+import fr.uno.domain.command.{PlayCard, StartGame, Command}
 import fr.uno.domain.model.game.{EmptyState, State, Game}
 import fr.uno.domain.event._
 import fr.uno.domain.model._
 import org.scalatest.{Matchers, FunSuite}
 import Game.{MINIMUM_PLAYER_COUNT, FIRST_PLAYER}
-import ops.ThrushOps
+import fr.uno.utils.ops.ThrushOps
 
 class GameTest extends FunSuite with Matchers {
 	val FROM_SCRATCH_EVENTS = Nil
@@ -105,11 +105,11 @@ class GameTest extends FunSuite with Matchers {
 	 * "framework" de test
 	 * on test le triplet (element neutre, decide, apply)
 	 */
-	def Given(events: List[Event]): List[Event] = events
-	def When(command: Command)(events: List[Event]) = (command, events)
-	def Then(expected: List[Event])(when: (Command, List[Event])) = specify(when._2, when._1, expected)
+	def Given(events: List[GameEvent]): List[GameEvent] = events
+	def When(command: Command)(events: List[GameEvent]) = (command, events)
+	def Then(expected: List[GameEvent])(when: (Command, List[GameEvent])) = specify(when._2, when._1, expected)
 
-	private def specify(givenEvents: List[Event], command: Command, expectedEvents: List[Event]) = {
+	private def specify(givenEvents: List[GameEvent], command: Command, expectedEvents: List[GameEvent]) = {
 		import fr.uno.domain.model.game.Game._
 
 		val currentState = givenEvents.foldLeft(EmptyState: State) { (currentState, event) => apply(currentState, event) }

@@ -1,3 +1,5 @@
+package fr.uno.utils
+
 package object ops {
 	/**
 	 * Thrush combinator

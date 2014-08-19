@@ -1,6 +1,6 @@
 package fr.uno.domain.model.game
 
-import fr.uno.application.command.{PlayCard, StartGame, Command}
+import fr.uno.domain.command.{PlayCard, StartGame, Command}
 import fr.uno.domain.event._
 import fr.uno.domain.model._
 
@@ -12,7 +12,7 @@ package object Game {
 	 * f(State, Command) = Events
 	 * La logique métier est là
 	 */
-	def decide(state: State, command: Command): List[Event] = {
+	def decide(state: State, command: Command): List[GameEvent] = {
 		(command match {
 			case StartGame(id, playerCount, firstCard) => {
 				if(playerCount < MINIMUM_PLAYER_COUNT) StartGameAborded(id, playerCount, firstCard)
@@ -25,7 +25,7 @@ package object Game {
 
 				if(isWrongNextPlayer(state, player)) PlayerPlayedAtWrongTurn(id, player, cardPlayed)
 				else if(isInvalidCard(state, cardPlayed)) PlayerPlayedBadCard(id, player, cardPlayed)
-				else CardPlayed(id, cardPlayed, newPlayer, newDirection)
+				else CardPlayed(id, cardPlayed, newPlayer, newDirection) // TODO emit DirectionChanged(newDirection)
 			}
 		}) :: Nil
 	}
@@ -34,7 +34,7 @@ package object Game {
 	 * f(State, Event) = State
 	 * ne prend pas de décision métier, construit juste l'état courant
 	 */
-	def apply(currentState: State, event: Event): State = {
+	def apply(currentState: State, event: GameEvent): State = {
 		event match {
 			case GameStarted(id, playerCount, firstCard) => NonEmptyState(firstCard, FIRST_PLAYER, playerCount, Clockwise)
 			case CardPlayed(id, card, nextPlayer, direction) =>
