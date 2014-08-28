@@ -2,7 +2,7 @@ package fr.uno.domain.event
 
 import fr.uno.domain.model._
 
-sealed trait GameEvent {
+sealed trait GameEvent extends UnoEvent {
 	def gameId: GameId
 }
 
