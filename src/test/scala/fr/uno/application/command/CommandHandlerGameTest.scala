@@ -26,5 +26,5 @@ class CommandHandlerGameTest extends FunSuite with Matchers {
 	}
 
 	def readEvent(streamId: String)(implicit connection: EsConnection): Future[ReadEventCompleted] =
-		connection.future(ReadEvent(EventStream(streamId)))
+		connection.future(ReadEvent(EventStream.Id(streamId)))
 }

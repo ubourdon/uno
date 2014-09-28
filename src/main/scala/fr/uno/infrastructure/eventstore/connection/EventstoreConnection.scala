@@ -1,4 +1,4 @@
-package fr.uno.application.command.eventstore.connection
+package fr.uno.infrastructure.eventstore.connection
 
 import eventstore.EsConnection
 

@@ -17,9 +17,10 @@ object UnoBuild extends Build {
 
 object Dependencies {
 	val scalaLibs = Seq(
-		"org.scalaz"                %% "scalaz-core"            % "7.0.6",
-		"com.geteventstore"         %% "eventstore-client"      % "0.5.0",
-		"com.typesafe.play"         %% "play-json"              % "2.3.1"
+		"org.scalaz"                %% "scalaz-core"                    % "7.0.6",
+		"com.geteventstore"         %% "eventstore-client"              % "1.0.0",
+		//"com.geteventstore"         %% "akka-persistence-eventstore"    % "1.0.0",
+		"com.typesafe.play"         %% "play-json"                      % "2.3.1"
 	)
 
 	val javaLibs = Seq(
