@@ -6,7 +6,7 @@ import fr.uno.domain.event._
 import fr.uno.domain.model._
 import org.scalatest.{Matchers, FunSuite}
 import Game.{MINIMUM_PLAYER_COUNT, FIRST_PLAYER}
-import fr.uno.utils.ops.ThrushOps
+import scalaz.Scalaz._
 
 class GameTest extends FunSuite with Matchers {
 	val FROM_SCRATCH_EVENTS = Nil
@@ -114,7 +114,6 @@ class GameTest extends FunSuite with Matchers {
 
 		val currentState = givenEvents.foldLeft(EmptyState: State) { (currentState, event) => apply(currentState, event) }
 
-		//println(s"current state : $currentState")
 		decide(currentState, command) shouldBe expectedEvents
 	}
 }

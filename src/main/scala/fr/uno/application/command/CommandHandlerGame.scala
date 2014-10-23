@@ -1,35 +1,37 @@
 package fr.uno.application.command
 
-import _root_.eventstore.{ReadStreamEvents, EventStream, EsConnection}
+import _root_.eventstore.EventStream
 import fr.uno.domain.command.Command
+import fr.uno.domain.event.GameEvent
+import fr.uno.domain.model.game.{EmptyState, State}
+import fr.uno.infrastructure.eventstore.Eventstore
+import concurrent.ExecutionContext.Implicits.global
+
 
 // The discard pile command handler is the link
 // between the command, the event store and the aggregate
 // This version loads the aggregate from scratch for each command
 // This is usually ok for aggregates with a small number of events
-object CommandHandlerGame { // TODO implement
+object CommandHandlerGame {
 
-	def CommandHandler(command: Command)(implicit connection: EsConnection) = ???/*{
+	import fr.uno.application.command.model.format.GameEventJsonFormatter.{gameEventReader, gameEventWriter}
+
+	def CommandHandler(command: Command) = {
 		import fr.uno.domain.model.game.Game._
 
-		val storedEvents = readStream(EventStream(s"game-${command.gameId.id}"))
+		val streamId = EventStream.Id(s"game-${command.gameId}")
 
-		storedEvents.map { readStreamEvents =>
-			val events: List[Event] = readStreamEvents.events.map { e => e.data.data. }
-
-
-				.foldLeft(EmptyState: State) { (currentState, event) => apply(currentState, event) }
+		val fEvents = Eventstore.read[GameEvent](streamId).map { events =>
+			events.map { result =>
+				result.fold(
+					errors => throw new IllegalStateException(s"event recovery fail : $errors"),
+					event => event
+				)
+			}
+		}.map { events =>
+			events.foldLeft(EmptyState: State) { (currentState, event) => apply(currentState, event) }
 		}
-		val currentState =
-
-	}*/
-
-	private def readStream(stream: EventStream.Id)(implicit connection: EsConnection) = connection.future(ReadStreamEvents(stream))
-
-	// build aggregate from eventstore
-		// apply
-	// Play the command
-		// decide
-	// store events in eventstore
-
+		.map { state => decide(state, command) }
+		.map { events => Eventstore.write(streamId, events) }
+	}
 }

@@ -1,7 +1,7 @@
 package fr.uno.infrastructure.eventstore
 
 import eventstore._
-import fr.uno.infrastructure.eventstore.connection.EventstoreConnection
+import fr.uno.infrastructure.eventstore.connection.{EventstoreProdConnection, EventstoreConnection}
 import play.api.libs.json.{JsResult, Json, Reads, Writes}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,3 +32,5 @@ trait Eventstore extends EventstoreConnection {
 	def write[T](streamId: EventStream.Id, event: T)(implicit writer: Writes[T]): Future[WriteEventsCompleted] =
 		write(streamId, event :: Nil)
 }
+
+object Eventstore extends Eventstore with EventstoreProdConnection

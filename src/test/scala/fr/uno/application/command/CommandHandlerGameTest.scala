@@ -20,7 +20,9 @@ class CommandHandlerGameTest extends FunSuite with Matchers {
 	implicit val connection = EsConnection(ActorSystem("coucou"), settings)*/
 
 	ignore("when send StartGame to CommandHandlerGame, should store GameStarted event") {
-		/*StartGame(GameId("coco"), 3, Card(Red, NumericCardValue(0))) |> CommandHandler
+	        // TODO use IOMonad to perform test without mocks
+
+				/*StartGame(GameId("coco"), 3, Card(Red, NumericCardValue(0))) |> CommandHandler
 
 		sync(readEvent("game-coco")).event.data.data shouldBe ???*/
 	}
