@@ -10,7 +10,6 @@ import fr.uno.domain.command.StartGame
 import fr.uno.domain.model.{NumericCardValue, Red, Card, GameId}
 import org.scalatest.{Matchers, FunSuite}
 import CommandHandlerGame.CommandHandler
-import fr.uno.utils.ops.ThrushOps
 
 import scala.concurrent.Future
 

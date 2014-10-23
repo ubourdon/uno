@@ -36,7 +36,7 @@ class GameTest extends FunSuite with Matchers {
 	test("given GameStarted, when play correct card, card should be Played") {
 		Given { GAME_STARTED_ZeroRedCard :: Nil } |>
 		When { PlayCard(GAME_ID, FIRST_PLAYER, Card(Blue, NumericCardValue(0))) } |>
-		Then { CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), FIRST_PLAYER +1, Clockwise) :: Nil }
+		Then { CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), FIRST_PLAYER +1) :: Nil }
 	}
 
 	// TODO test by checking error or by expected 'green case' result ????
@@ -49,7 +49,7 @@ class GameTest extends FunSuite with Matchers {
 	test("player can play card with same color & different numeric value") {
 		Given { GAME_STARTED_ZeroRedCard :: Nil } |>
 		When { PlayCard(GAME_ID, FIRST_PLAYER, Card(Red, NumericCardValue(1))) } |>
-		Then { CardPlayed(GAME_ID, Card(Red, NumericCardValue(1)), FIRST_PLAYER +1, Clockwise) :: Nil }
+		Then { CardPlayed(GAME_ID, Card(Red, NumericCardValue(1)), FIRST_PLAYER +1) :: Nil }
 	}
 
 	test("player 0 should play at first") {
@@ -58,35 +58,47 @@ class GameTest extends FunSuite with Matchers {
 		Then { PlayerPlayedAtWrongTurn(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) :: Nil }
 	}
 
-	test("[positive case] when play kick back card, then next player become previous player") {
+	ignore("[positive case] when play kick back card, then next player become previous player") {
 		Given {
 			GAME_STARTED_ZeroRedCard ::
-			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_2, CounterClockwise) ::
+			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_2) ::
 			Nil
 		} |>
 		When { PlayCard(GAME_ID, PLAYER_2, Card(Red, NumericCardValue(0))) } |>
-		Then { CardPlayed(GAME_ID, Card(Red, NumericCardValue(0)), PLAYER_2 -1, CounterClockwise) :: Nil }
+		Then {
+			CardPlayed(GAME_ID, Card(Red, NumericCardValue(0)), PLAYER_2 -1) :: Nil
+		}
+	}
+
+	test("[positive case] when play kick back card, then card should be played & Direction should be Changed") {
+		Given { GAME_STARTED_ZeroRedCard :: Nil} |>
+		When { PlayCard(GAME_ID, FIRST_PLAYER, Card(Red, KickBackCardValue)) } |>
+		Then {
+			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_1) ::
+			DirectionChanged(GAME_ID, CounterClockwise) :: Nil
+		}
 	}
 
 	test("[error case] when play kick back card, then next player become previous player") {
 		Given {
 			GAME_STARTED_ZeroRedCard ::
-			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), 2, CounterClockwise) ::
+			CardPlayed(GAME_ID, Card(Red, KickBackCardValue), 2) ::
+			DirectionChanged(GAME_ID, CounterClockwise) ::
 			Nil
 		} |>
 		When { PlayCard(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) } |>
 		Then { PlayerPlayedAtWrongTurn(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) :: Nil }
 	}
 
-	test("when play 'kick back' card, the direction changed") {
+	ignore("when play 'kick back' card, the direction changed") {
 		Given {
 			GAME_STARTED_ZeroRedCard ::
-				CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_2, CounterClockwise) ::
-				CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), PLAYER_1, CounterClockwise) ::
+				CardPlayed(GAME_ID, Card(Red, KickBackCardValue), PLAYER_2) ::
+				CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), PLAYER_1) ::
 				Nil
 		} |>
 		When { PlayCard(GAME_ID, PLAYER_1, Card(Blue, NumericCardValue(0))) } |>
-		Then { CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), PLAYER_1 -1, CounterClockwise) :: Nil }
+		Then { CardPlayed(GAME_ID, Card(Blue, NumericCardValue(0)), PLAYER_1 -1) :: Nil }
 	}
 
 	/*ignore("spike next player") {

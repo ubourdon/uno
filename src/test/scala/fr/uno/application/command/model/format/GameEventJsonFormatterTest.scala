@@ -21,10 +21,10 @@ class GameEventJsonFormatterTest extends FunSuite with Matchers {
 		import fr.uno.application.command.model.format.GameEventJsonFormatter.{gameEventReader, gameEventWriter}
 		import play.api.libs.json.Json
 
-		val event_clockwise = CardPlayed(GameId("1"), Card(Red, NumericCardValue(0)), 0, Clockwise)
+		val event_clockwise = CardPlayed(GameId("1"), Card(Red, NumericCardValue(0)), 0)
 		Json.toJson(event_clockwise).validate[GameEvent].get shouldBe event_clockwise
 
-		val event_counterclockwise = CardPlayed(GameId("1"), Card(Red, NumericCardValue(0)), 0, CounterClockwise)
+		val event_counterclockwise = CardPlayed(GameId("1"), Card(Red, NumericCardValue(0)), 0)
 		Json.toJson(event_counterclockwise).validate[GameEvent].get shouldBe event_counterclockwise
 	}
 

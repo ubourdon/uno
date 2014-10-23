@@ -42,14 +42,14 @@ class EventstoreTest extends FunSuite with Matchers with BeforeAndAfter with Bef
 
 	val (event, stream1) = {
 		val event1 = GameStarted(GameId("1"), 3, Card(Red, NumericCardValue(0)))
-		val event2 = CardPlayed(GameId("1"), Card(Red, NumericCardValue(1)),1, Clockwise)
+		val event2 = CardPlayed(GameId("1"), Card(Red, NumericCardValue(1)),1)
 		val streamId = EventStream.Id(s"game-${event1.gameId.id}")
 		(event1, streamId)
 	}
 
 	val (events, stream2) = {
 		val event1 = GameStarted(GameId("2"), 3, Card(Red, NumericCardValue(0)))
-		val event2 = CardPlayed(GameId("2"), Card(Red, NumericCardValue(1)),1, Clockwise)
+		val event2 = CardPlayed(GameId("2"), Card(Red, NumericCardValue(1)),1)
 		val streamId = EventStream.Id(s"game-${event1.gameId.id}")
 		(event1 :: event2 :: Nil, streamId)
 	}
